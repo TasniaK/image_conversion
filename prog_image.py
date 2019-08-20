@@ -3,20 +3,21 @@ from flask import Flask, request, flash, redirect, send_file
 import uuid
 from PIL import Image
 import glob
+import config
+from werkzeug.exceptions import BadRequest
 
 # make flask app
-UPLOAD_FOLDER = './uploaded_images'
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = config.ALLOWED_EXTENSIONS
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
+app.secret_key = config.SECRET_KEY
 
 def has_allowed_ext(filename):
     extension_given = filename.rsplit('.', 1)[1].lower()
     if extension_given in ALLOWED_EXTENSIONS:
         return extension_given
-    return None
+    raise BadRequest('This image extension is not allowed.')
 
 # return image and convert if a format parameter is passed in.
 @app.route('/image/<string:image_identifier>/', methods=['GET'])
@@ -66,9 +67,7 @@ def upload_image():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             return 'Your unique identifier is: {}'.format(unique_identifier)
 
-# write tests that test the image upload, download and file format conversion
-
-# documentation, comments, readme.md. documentation accessible through api - swagger.
+# documentation accessible through api - swagger.
 
 if __name__ == '__main__':
     app.run()
