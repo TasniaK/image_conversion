@@ -1,4 +1,6 @@
 challenge.txt
+uploaded_images/*
+!uploaded_images/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
