@@ -1,12 +1,38 @@
-from flask import Flask, request
+import os
+from flask import Flask, request, flash, redirect, send_file
+import uuid
+from PIL import Image
+import glob
 
 # make flask app
-app = Flask(__name__)
+UPLOAD_FOLDER = './uploaded_images'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
-# make api accept image uploads at image/upload/ and return unique identifier.
-@app.route('/image/upload/')
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+def has_allowed_ext(filename):
+    extension_given = filename.rsplit('.', 1)[1].lower()
+    if extension_given in ALLOWED_EXTENSIONS:
+        return extension_given
+    return None
+
+# upload image and return unique identifier.
+@app.route('/image/upload/', methods=['POST'])
 def upload_image():
-    return 'Upload an image here.'
+    if request.method == 'POST':
+        # if no file in request.
+        if 'file' not in request.files:
+            print('No file given in request')
+            return redirect(request.url)
+
+        file = request.files['file']
+
+        # if no file selected.
+        if file.filename == '':
+            print('No file selected')
+            return redirect(request.url)
 
 # download image when image/{unique identifier} is accessed
 @app.route('/image/<string:image_identifier>/', methods=['GET'])
