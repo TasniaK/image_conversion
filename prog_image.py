@@ -18,6 +18,30 @@ def has_allowed_ext(filename):
         return extension_given
     return None
 
+# download image and convert if a format parameter is passed in.
+@app.route('/image/<string:image_identifier>/', methods=['GET'])
+def get_image(image_identifier):
+    # grab file path.
+    file_path = ''
+    current_extension = ''
+    for file in glob.glob('{0}/{1}.*'.format(app.config['UPLOAD_FOLDER'], image_identifier)):
+        file_path = file.split('.')[1]
+        current_extension = file.split('.')[2]
+    image = Image.open(".{0}.{1}".format(file_path, current_extension))
+
+    # if image_format parameter is passed to url.
+    image_format = request.args.get('format')
+    if image_format:
+        # if image format requested is existing format.
+        if image_format == current_extension:
+            return send_file(".{0}.{1}".format(file_path, current_extension))
+        else:
+            new_filename = '{0}.{1}'.format(image_identifier, image_format)
+            image.save(os.path.join(app.config['UPLOAD_FOLDER'],new_filename), image_format)
+            current_extension = image.format
+
+    return send_file(".{0}.{1}".format(file_path, current_extension))
+
 # upload image and return unique identifier.
 @app.route('/image/upload/', methods=['POST'])
 def upload_image():
@@ -34,15 +58,13 @@ def upload_image():
             print('No file selected')
             return redirect(request.url)
 
-# download image when image/{unique identifier} is accessed
-@app.route('/image/<string:image_identifier>/', methods=['GET'])
-def get_image(image_identifier):
-    return 'showing image: {}'.format(image_identifier)
-
-# download image in specified format when image/{unique identifier}/{image format} is accessed.
-@app.route('/image/<string:image_identifier>/<string:image_format>/', methods=['GET'])
-def get_converted_image(image_identifier, image_format):
-    return 'showing image: {} in the format: {}'.format(image_identifier, image_format)
+        # otherwise, upload file to upload folder.
+        extension = has_allowed_ext(file.filename)
+        if file and extension:
+            unique_identifier = str(uuid.uuid4())
+            unique_filename = "{0}.{1}".format(unique_identifier, extension)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            return 'Your unique identifier is: {}'.format(unique_identifier)
 
 # write tests that test the image upload, download and file format conversion
 
