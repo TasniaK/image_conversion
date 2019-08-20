@@ -18,7 +18,7 @@ def has_allowed_ext(filename):
         return extension_given
     return None
 
-# download image and convert if a format parameter is passed in.
+# return image and convert if a format parameter is passed in.
 @app.route('/image/<string:image_identifier>/', methods=['GET'])
 def get_image(image_identifier):
     # grab file path.
