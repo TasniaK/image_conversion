@@ -13,30 +13,40 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
 app.secret_key = config.SECRET_KEY
 
+def image_save(image, image_filename, image_format):
+    image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename), image_format)
 
 @app.route('/image/<string:image_identifier>/', methods=['GET'])
 def get_image(image_identifier):
     """Return image to user, convert if format parameter is passed to url."""
-    # grab file path.
+    # grab file path of original file.
+    files_found = {}
     file_path = ''
     current_extension = ''
-    for file in glob.glob('{0}/{1}.*'.format(app.config['UPLOAD_FOLDER'], image_identifier)):
-        file_path = file.split('.')[1]
-        current_extension = file.split('.')[2]
-    image = Image.open(".{0}.{1}".format(file_path, current_extension))
+    for file in glob.glob('{0}/{1}*'.format(app.config['UPLOAD_FOLDER'], image_identifier)):
+        files_found[file] = {'file_path': file.split('.')[1], 'current_extension': file.split('.')[2]}
+    for key,value in files_found.items():
+        if '_' in value.get('file_path').split('/')[-1]:
+            current_extension = value.get('current_extension')
+            file_path = value.get('file_path')
+    full_file_path = ".{0}.{1}".format(file_path, current_extension)
+    image = Image.open(full_file_path)
 
     # if image_format parameter is passed to url.
     image_format = request.args.get('format')
     if image_format:
-        # if image format requested is existing format.
-        if image_format == current_extension:
-            return send_file(".{0}.{1}".format(file_path, current_extension))
-        else:
-            new_filename = '{0}.{1}'.format(image_identifier, image_format)
-            image.save(os.path.join(app.config['UPLOAD_FOLDER'],new_filename), image_format)
-            current_extension = image.format
+        # if image format requested already exists.
+        for key, value in files_found.items():
+            if image_format == value.get('current_extension'):
+                file_path = value.get('file_path')
+                return send_file(".{0}.{1}".format(file_path, image_format))
 
-    return send_file(".{0}.{1}".format(file_path, current_extension))
+        # convert image format
+        new_filename = '{0}.{1}'.format(image_identifier, image_format)
+        image_save(image, new_filename, image_format)
+        full_file_path = "{0}/{1}".format(app.config['UPLOAD_FOLDER'], new_filename)
+
+    return send_file(full_file_path)
 
 def has_allowed_ext(filename):
     """Check if image being uploaded has one of the allowed extensions."""
@@ -66,7 +76,7 @@ def upload_image():
         extension = has_allowed_ext(file.filename)
         if file and extension:
             unique_identifier = str(uuid.uuid4())
-            unique_filename = "{0}.{1}".format(unique_identifier, extension)
+            unique_filename = "{0}_.{1}".format(unique_identifier, extension)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             return 'Your unique identifier is: {}'.format(unique_identifier)
 
