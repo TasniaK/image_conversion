@@ -13,15 +13,11 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
 app.secret_key = config.SECRET_KEY
 
-def has_allowed_ext(filename):
-    extension_given = filename.rsplit('.', 1)[1].lower()
-    if extension_given in ALLOWED_EXTENSIONS:
-        return extension_given
-    raise BadRequest('This image extension is not allowed.')
 
 # return image and convert if a format parameter is passed in.
 @app.route('/image/<string:image_identifier>/', methods=['GET'])
 def get_image(image_identifier):
+    """Return image to user, convert if format paramter is passed to url."""
     # grab file path.
     file_path = ''
     current_extension = ''
@@ -43,9 +39,17 @@ def get_image(image_identifier):
 
     return send_file(".{0}.{1}".format(file_path, current_extension))
 
+def has_allowed_ext(filename):
+    """Check if image being uploaded has one of the allowed extensions."""
+    extension_given = filename.rsplit('.', 1)[1].lower()
+    if extension_given in ALLOWED_EXTENSIONS:
+        return extension_given
+    raise BadRequest('This image extension is not allowed.')
+
 # upload image and return unique identifier.
 @app.route('/image/upload/', methods=['POST'])
 def upload_image():
+    """Upload image via api, return the unique identifier for that image."""
     if request.method == 'POST':
         # if no file in request.
         if 'file' not in request.files:
