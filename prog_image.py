@@ -14,10 +14,9 @@ app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
 app.secret_key = config.SECRET_KEY
 
 
-# return image and convert if a format parameter is passed in.
 @app.route('/image/<string:image_identifier>/', methods=['GET'])
 def get_image(image_identifier):
-    """Return image to user, convert if format paramter is passed to url."""
+    """Return image to user, convert if format parameter is passed to url."""
     # grab file path.
     file_path = ''
     current_extension = ''
