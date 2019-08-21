@@ -72,4 +72,4 @@ def test_get_image_format_same_as_original(client):
     mock = Mock()
     function = mock.image_save()
     assert not function.called
-    
+
