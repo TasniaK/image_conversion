@@ -80,7 +80,5 @@ def upload_image():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             return 'Your unique identifier is: {}'.format(unique_identifier)
 
-# documentation accessible through api - swagger.
-
 if __name__ == '__main__':
     app.run()
